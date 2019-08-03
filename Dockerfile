@@ -1,6 +1,7 @@
 FROM ubuntu:18.10
 LABEL Maintainer="James Lin<til002@ucsd.edu>"
 
+# Install required & preferred packages
 RUN apt-get update && apt-get install -y \
     build-essential \
     git \
@@ -28,13 +29,19 @@ RUN apt-get update && apt-get install -y \
     bison \
     flex
 
+# Todo: Avoid using /tmp/* for not contaminating the docker image
+# Clone the KiCad sources to local /tmp
 WORKDIR /tmp
 RUN git clone --depth 1 -b master https://git.launchpad.net/kicad
+
+# Run KiCad configure scripts
+# Can skip this part if disable KICAD_SPICE in the next step
 WORKDIR ./kicad/scripting/build_tools
 RUN chmod +x get_libngspice_so.sh
 RUN ./get_libngspice_so.sh && ./get_libngspice_so.sh install
 RUN ldconfig
 
+# Make KiCad and install KiCad
 WORKDIR /tmp/kicad
 RUN cmake -DCMAKE_BUILD_TYPE=Release \
     -DKICAD_SCRIPTING=ON \
